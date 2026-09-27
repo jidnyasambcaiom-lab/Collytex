@@ -1,0 +1,12 @@
+import Link from "next/link";
+import { requireUser } from "@/lib/permissions";
+import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+export default async function CompareCollegesPage() {
+  const user = await requireUser(["STUDENT"]);
+  const saved = await prisma.studentSavedCollege.findMany({ where: { userId: user.id, college: { verificationStatus: "VERIFIED" } }, orderBy: { createdAt: "desc" }, take: 4, include: { college: { include: { branches: { where: { isApproved: true }, include: { departments: { include: { offerings: { include: { courses: true } } } } } } } } } });
+  const colleges = saved.map(({ college }) => ({ ...college, departments: college.branches.reduce((sum, branch) => sum + branch.departments.length, 0), courses: college.branches.reduce((sum, branch) => sum + branch.departments.reduce((count, department) => count + department.offerings.reduce((items, offering) => items + offering.courses.length, 0), 0), 0), cities: [...new Set(college.branches.map((branch) => branch.city))] }));
+  return <main className="account-page"><header className="site-header"><Link className="brand" href="/student"><span className="brand-mark">c</span><span>collytex</span></Link><nav className="main-nav"><Link href="/explore">Explore colleges</Link><Link href="/student">Your shortlist</Link></nav></header><div className="account-content"><div className="eyebrow">YOUR SHORTLIST</div><h1>Compare colleges.</h1><p>Compare up to four saved colleges using information they have published.</p>{colleges.length < 2 ? <div className="empty-state"><div><strong>Save at least two colleges to compare.</strong><p>Your saved colleges will be ready here when you have a shortlist.</p></div><Link href="/explore">Explore colleges →</Link></div> : <div className="compare-table-wrap"><table className="compare-table"><thead><tr><th>College detail</th>{colleges.map((college) => <th key={college.id}><Link href={`/colleges/${college.slug}`}>{college.name}</Link><small>{college.website ? "Official website available" : ""}</small></th>)}</tr></thead><tbody><tr><th>Locations</th>{colleges.map((college) => <td key={college.id}>{college.cities.join(", ") || "Not provided"}</td>)}</tr><tr><th>Approved campuses</th>{colleges.map((college) => <td key={college.id}>{college.branches.length}</td>)}</tr><tr><th>Departments</th>{colleges.map((college) => <td key={college.id}>{college.departments}</td>)}</tr><tr><th>Published courses</th>{colleges.map((college) => <td key={college.id}>{college.courses}</td>)}</tr></tbody></table></div>}</div></main>;
+}

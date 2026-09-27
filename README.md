@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Collytex
 
-## Getting Started
+Collytex is a Next.js college directory and management platform. Public pages read verified college, branch, department, university and course data from PostgreSQL through Prisma. Authentication uses opaque, database-backed sessions; roles are always loaded from the user record on the server.
 
-First, run the development server:
+## Local setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. Install dependencies with `npm install`.
+2. Put the existing PostgreSQL connection in a local `.env` as `DATABASE_URL`. Do not commit that file.
+3. Generate the Prisma client with `npm run db:generate`.
+4. Run `npm run dev`.
+
+There is no seed script and no production sample data. The directory stays empty until real college records have been verified and published.
+
+## Existing database safety
+
+The schema in `prisma/schema.prisma` describes the first Collytex data model. Before generating or applying a migration against an existing database, inspect its current schema and data. A read-only Prisma schema preview is available with:
+
+```powershell
+npx prisma db pull --print
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Compare the existing schema with the application model and review any migration SQL before applying it. Do not run `prisma migrate reset`, drop existing tables, or apply generated SQL until the current schema and data have been reconciled. No migration has been applied by this project setup.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run lint`
+- `npm run build`
+- `npm run db:generate`
 
-## Learn More
+## Product paths
 
-To learn more about Next.js, take a look at the following resources:
+- `/` and `/explore`: public college discovery and combined filters.
+- `/colleges/[college]/[branch]/[department]/[university]/[course]`: public hierarchy and course details.
+- `/login`, `/register`, `/register/college`: student and college-head account entry.
+- `/college`: organization dashboard and scoped branch/course management.
+- `/student`: saved colleges, saved courses and recent views; `/student/compare` compares saved courses.
+- `/admin`: platform verification, reach and audit overview.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Images and documents are represented as validated HTTP(S) links for now. Object storage credentials and a storage provider are not configured in this project environment, so uploads are not enabled.
