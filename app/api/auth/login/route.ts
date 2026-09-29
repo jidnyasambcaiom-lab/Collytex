@@ -31,10 +31,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Username, email, or password is incorrect." }, { status: 401 });
     }
     const roleMatchesLoginType =
-      !parsed.data.loginType ||
-      (parsed.data.loginType === "STUDENT" && (user.role === "STUDENT" || user.role === "PLATFORM_ADMIN")) ||
-      (parsed.data.loginType === "COLLEGE" && (user.role === "COLLEGE_HEAD" || user.role === "COLLEGE_BRANCH")) ||
-      (parsed.data.loginType === "ADMIN" && user.role === "PLATFORM_ADMIN");
+      !loginType ||
+      (loginType === "STUDENT" && (user.role === "STUDENT" || user.role === "PLATFORM_ADMIN")) ||
+      (loginType === "COLLEGE" && (user.role === "COLLEGE_HEAD" || user.role === "COLLEGE_BRANCH")) ||
+      (loginType === "ADMIN" && user.role === "PLATFORM_ADMIN");
     if (!roleMatchesLoginType) return NextResponse.json({ error: "Username, email, or password is incorrect." }, { status: 401 });
     await prisma.loginAttempt.deleteMany({ where: { identifierHash } });
     await startSession(user.id);

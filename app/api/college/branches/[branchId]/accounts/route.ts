@@ -4,7 +4,12 @@ import { currentUser } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/db";
 
-const input = z.object({ name: z.string().trim().min(2).max(100), email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()), password: z.string().min(12).max(128) });
+const input = z.object({
+  name: z.string().trim().min(2).max(100),
+  username: z.string().trim().min(3).max(32).regex(/^[a-zA-Z0-9._-]+$/).transform((value) => value.toLowerCase()),
+  email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
+  password: z.string().min(12).max(128),
+});
 
 export async function POST(request: Request, context: { params: Promise<{ branchId: string }> }) {
   const user = await currentUser();
@@ -17,10 +22,10 @@ export async function POST(request: Request, context: { params: Promise<{ branch
     if (!branch) return NextResponse.json({ error: "Branch not found in your organization." }, { status: 404 });
     const passwordHash = await hashPassword(parsed.data.password);
     const created = await prisma.$transaction(async (tx) => {
-      const account = await tx.user.create({ data: { name: parsed.data.name, email: parsed.data.email, passwordHash, role: "COLLEGE_BRANCH", collegeId: user.collegeId!, branchId }, select: { id: true, name: true, email: true } });
+      const account = await tx.user.create({ data: { name: parsed.data.name, username: parsed.data.username, email: parsed.data.email, passwordHash, role: "COLLEGE_BRANCH", collegeId: user.collegeId!, branchId }, select: { id: true, name: true, username: true, email: true } });
       await tx.auditLog.create({ data: { actorId: user.id, action: "BRANCH_ACCOUNT_CREATED", entityType: "User", entityId: account.id, metadata: { branchId } } });
       return account;
     });
     return NextResponse.json({ ok: true, account: created }, { status: 201 });
-  } catch { return NextResponse.json({ error: "Unable to create this account. The email may already be in use." }, { status: 409 }); }
+  } catch { return NextResponse.json({ error: "Unable to create this account. The email or username may already be in use." }, { status: 409 }); }
 }
