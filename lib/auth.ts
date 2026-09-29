@@ -29,6 +29,6 @@ export async function currentUser() {
       if (session) await prisma.session.deleteMany({ where: { tokenHash: hashToken(token) } });
       return null;
     }
-    return await prisma.user.findUnique({ where: { id: session.userId }, select: { id: true, name: true, email: true, role: true, collegeId: true, branchId: true } });
+    return await prisma.user.findUnique({ where: { id: session.userId }, select: { id: true, name: true, email: true, role: true, collegeId: true, branchId: true, marks: true } });
   } catch { return null; }
 }

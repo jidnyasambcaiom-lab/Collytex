@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { loginUser, signupUser } from "@/app/actions/auth";
 
 export function AuthForm({
   mode,
@@ -27,7 +28,21 @@ export function AuthForm({
     setBusy(true);
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
     try {
-      const response = await fetch(`/api/auth/${mode === "login" ? "login" : "register"}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...values, ...(mode === "register" ? { accountType } : { loginType }) }) });
+      if (mode === "login") {
+        const result = await loginUser(String(values.identity ?? ""), String(values.password ?? ""), loginType);
+        if (!result.success) { setError(result.error); return; }
+        router.push(result.redirect);
+        router.refresh();
+        return;
+      }
+      if (accountType === "STUDENT") {
+        const result = await signupUser(new FormData(event.currentTarget));
+        if (!result.success) { setError(result.error); return; }
+        router.push(result.redirect);
+        router.refresh();
+        return;
+      }
+      const response = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...values, accountType }) });
       const result = await response.json();
       if (!response.ok) { setError(result.error ?? "Unable to continue. Please try again."); return; }
       router.push(result.redirectTo ?? "/account");

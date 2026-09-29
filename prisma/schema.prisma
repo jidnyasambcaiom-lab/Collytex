@@ -46,6 +46,7 @@ model User {
   name          String
   passwordHash  String
   role          Role                  @default(STUDENT)
+  marks         Float?                @default(0)
   collegeId     String?
   branchId      String?
   createdAt     DateTime              @default(now())
@@ -299,4 +300,17 @@ model LoginAttempt {
   updatedAt       DateTime  @updatedAt
 
   @@index([blockedUntil])
+}
+
+model Scholarship {
+  id        String   @id @default(uuid())
+  title     String
+  provider  String
+  amount    String
+  minMarks  Float
+  deadline  DateTime
+  applyUrl  String
+  createdAt DateTime @default(now())
+
+  @@index([deadline, minMarks])
 }
