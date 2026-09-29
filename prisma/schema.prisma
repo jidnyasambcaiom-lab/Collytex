@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -13,6 +13,7 @@ enum Role {
   COLLEGE_HEAD
   COLLEGE_BRANCH
   STUDENT
+  DEVELOPER
 }
 
 enum VerificationStatus {
@@ -40,24 +41,20 @@ enum BlockType {
 }
 
 model User {
-  id            String                @id @default(uuid())
-  email         String                @unique
-  username      String                @unique
-  name          String
-  passwordHash  String
-  role          Role                  @default(STUDENT)
-  marks         Float?                @default(0)
-  collegeId     String?
-  branchId      String?
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
-  college       College?              @relation(fields: [collegeId], references: [id], onDelete: SetNull)
-  branch        Branch?               @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  id           String               @id @default(cuid())
+  username     String               @unique
+  email        String               @unique
+  name         String
+  passwordHash String
+  role         Role                 @default(STUDENT)
+  marks        Float?               @default(0)
   savedColleges StudentSavedCollege[]
   savedCourses  StudentSavedCourse[]
   auditLogs     AuditLog[]
   recentViews   RecentView[]
   sessions      Session[]
+  colleges      College[]
+  branches      Branch[]
 }
 
 model College {
@@ -303,13 +300,14 @@ model LoginAttempt {
 }
 
 model Scholarship {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   title     String
   provider  String
   amount    String
   minMarks  Float
   deadline  DateTime
   applyUrl  String
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
   @@index([deadline, minMarks])
